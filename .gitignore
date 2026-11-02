@@ -1,0 +1,22 @@
+# Environnement
+.venv/
+venv/
+.python-version
+
+# Caches Python et outils
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Rendus quotidiens : ils se déposent, ils ne se versionnent pas
+*.zip
+
+# Éditeurs et système
+.vscode/
+.idea/
+*.swp
+.DS_Store
