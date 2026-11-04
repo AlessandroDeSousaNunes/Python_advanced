@@ -105,7 +105,9 @@ def test_fmt_en_place(tmp_path):
 
 def test_mypy_strict_passe():
     api = pytest.importorskip("mypy.api")
-    sortie, erreurs, code = api.run(
-        ["--config-file", str(PROJET.parent / "pyproject.toml"), str(PROJET / "plume")]
-    )
+    # Le pyproject.toml du dépôt du cours active déjà --strict ; sans lui
+    # (dépôt de rendu), on le demande explicitement.
+    config = PROJET.parent / "pyproject.toml"
+    options = ["--config-file", str(config)] if config.is_file() else ["--strict"]
+    sortie, erreurs, code = api.run([*options, str(PROJET / "plume")])
     assert code == 0, sortie + erreurs
