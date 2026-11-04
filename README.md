@@ -12,8 +12,11 @@ Les énoncés et les tests sont dans le dépôt du cours.
 | `exercices/00_bases` | 1 à 6 | ✅ |
 | `exercices/01_modele_objet` | 1 à 6 | ✅ |
 | `exercices/02_fonctions` | 1 à 6 | ✅ |
+| `exercices/03_iterateurs` | 1 à 6 | ✅ |
+| `exercices/04_ressources` | 1 à 6 | ✅ |
+| `exercices/05_typage` | 1 à 6 | ✅ (mypy --strict compris) |
 
-`python -m pytest exercices` dans le dépôt du cours : 402 tests passent.
+`python -m pytest exercices` dans le dépôt du cours : 1091 tests passent.
 
 ## Projet langage
 
