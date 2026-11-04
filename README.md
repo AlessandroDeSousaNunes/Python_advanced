@@ -18,6 +18,20 @@ Les énoncés et les tests sont dans le dépôt du cours.
 
 `python -m pytest exercices` dans le dépôt du cours : 1091 tests passent.
 
-## Projet langage
+## Projet langage : Plume
 
-À venir : étape 1, la spécification.
+Un petit langage aux mots-clés français, transpilé en Python (`projet/`).
+
+- `projet/specification.md` : la spécification (à faire valider) ;
+- `projet/exemples/` : cinq programmes et leurs sorties attendues ;
+- `projet/plume/` : le compilateur (lexer, parser de Pratt, analyse sémantique,
+  génération de Python, CLI, REPL, formateur) ;
+- `projet/tests/` : les tests de chaque étape (199 tests, `mypy --strict` compris).
+
+```bash
+cd projet
+python -m plume run exemples/04_fonctions.plume
+python -m plume repl
+```
+
+Étapes 1 à 10 faites. Extensions 11 à 13 et serveur MCP : pas encore.

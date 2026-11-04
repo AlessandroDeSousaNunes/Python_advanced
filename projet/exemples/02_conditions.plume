@@ -1,0 +1,27 @@
+# Conditions, comparaisons et booléens.
+soit age = 17;
+si age >= 18 {
+    affiche "majeur";
+} sinon {
+    affiche "mineur";
+}
+
+soit note = 14;
+si note >= 16 {
+    affiche "très bien";
+} sinon si note >= 12 {
+    affiche "bien";
+} sinon {
+    affiche "à revoir";
+}
+
+affiche vrai, faux;
+affiche 3 < 5, 3 == 4, 3 != 4;
+affiche vrai et faux, vrai ou faux, non faux;
+affiche non 1 == 2;
+
+soit pluie = faux;
+soit vent = vrai;
+si non pluie et vent {
+    affiche "temps à cerf-volant";
+}

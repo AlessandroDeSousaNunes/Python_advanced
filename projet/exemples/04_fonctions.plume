@@ -1,0 +1,25 @@
+# Fonctions, récursion et valeur de retour.
+fonction carre(x) {
+    retourne x * x;
+}
+
+fonction factorielle(n) {
+    si n <= 1 {
+        retourne 1;
+    }
+    retourne n * factorielle(n - 1);
+}
+
+fonction saluer(qui) {
+    affiche "Salut", qui;
+}
+
+affiche carre(9);
+soit k = 0;
+tantque k <= 5 {
+    affiche k, factorielle(k);
+    k = k + 1;
+}
+saluer("Grace");
+affiche saluer("Linus");
+affiche "factorielle(10) = " + texte(factorielle(10));

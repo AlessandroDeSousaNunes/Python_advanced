@@ -1,0 +1,33 @@
+# Blocs, portées et variables globales.
+soit compteur = 0;
+
+fonction incrementer(pas) {
+    compteur = compteur + pas;
+    retourne compteur;
+}
+
+incrementer(2);
+incrementer(3);
+affiche "compteur :", compteur;
+
+si vrai {
+    soit message = "dans le bloc";
+    affiche message;
+}
+si vrai {
+    soit message = "un autre bloc, le même nom";
+    affiche message;
+}
+
+fonction maximum(a, b) {
+    si a > b {
+        retourne a;
+    }
+    retourne b;
+}
+
+# len et print sont des noms de Python : Plume les accepte.
+soit len = 4;
+soit print = 10;
+affiche "maximum :", maximum(len, print);
+affiche "division entière :", 17 / 5, "reste :", 17 % 5;

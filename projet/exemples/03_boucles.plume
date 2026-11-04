@@ -1,0 +1,28 @@
+# Boucles : compter, additionner, FizzBuzz.
+soit i = 1;
+tantque i <= 5 {
+    affiche "tour", i;
+    i = i + 1;
+}
+
+soit somme = 0;
+soit n = 1;
+tantque n <= 100 {
+    somme = somme + n;
+    n = n + 1;
+}
+affiche "somme de 1 à 100 :", somme;
+
+soit k = 1;
+tantque k <= 15 {
+    si k % 15 == 0 {
+        affiche "FizzBuzz";
+    } sinon si k % 3 == 0 {
+        affiche "Fizz";
+    } sinon si k % 5 == 0 {
+        affiche "Buzz";
+    } sinon {
+        affiche k;
+    }
+    k = k + 1;
+}

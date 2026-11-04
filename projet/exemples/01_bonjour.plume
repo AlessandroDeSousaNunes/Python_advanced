@@ -1,0 +1,12 @@
+# Premier programme : afficher des valeurs.
+affiche "Bonjour, Plume !";
+soit nom = "Ada";
+affiche "Bonjour", nom;
+
+soit a = 7;
+soit b = 3;
+affiche a + b * 2;
+affiche (a + b) * 2;
+affiche a / b, a % b;
+affiche -a + 1;
+affiche "ligne 1\nligne 2";
