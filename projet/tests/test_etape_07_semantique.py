@@ -3,9 +3,9 @@ from functools import singledispatchmethod
 import pytest
 from outils import EXEMPLES, lire
 from plume.erreurs import ErreurSemantique, ErreursMultiples, Position
-from plume.parser import parse
-from plume.semantique import Analyseur, analyser
-from plume.symboles import Genre, Symbole, TableSymboles
+from plume.etape2_parser.parser import parse
+from plume.etape3_analyse.semantique import Analyseur, analyser
+from plume.etape3_analyse.symboles import Genre, Symbole, TableSymboles
 
 
 def analyse(source):

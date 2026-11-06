@@ -8,8 +8,9 @@ Une IA qui ne connaît pas Plume se branche sur ce serveur. Il lui donne :
 - des RESSOURCES qu'elle peut lire : la spécification et les exemples ;
 - des PROMPTS, des modes d'emploi tout prêts : écrire un programme, en corriger un.
 
-Chaque outil est une fine couche autour de la façade ``plume.compilateur`` :
-il appelle la façade, puis convertit le résultat en JSON.
+Chaque outil est une fine couche autour de la façade
+``plume.etape5_execution.compilateur`` : il appelle la façade, puis convertit
+le résultat en JSON.
 """
 
 import re
@@ -20,15 +21,15 @@ from typing import Annotated, Literal, TypedDict
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ResourceNotFoundError, ToolError
 from mcp_types import ToolAnnotations
-from plume.compilateur import (
+from plume.erreurs import ErreurPlume, ErreursMultiples, formater
+from plume.etape1_lexer.tokens import Token
+from plume.etape5_execution.compilateur import (
     BACKENDS,
     analyser_syntaxe,
     compiler,
     decouper,
     transpiler,
 )
-from plume.erreurs import ErreurPlume, ErreursMultiples, formater
-from plume.tokens import Token
 from pydantic import Field
 
 from serveur_plume import bac_a_sable

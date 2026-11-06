@@ -28,6 +28,21 @@ Exemple : `soit x = 2;`
 
 ## 2. Les fichiers, un par un
 
+Le paquet `plume/` est rangé en 5 dossiers, un par étape, dans l'ordre :
+
+```
+plume/
+├── etape1_lexer/       lexer.py (principal), tokens.py, flux.py
+├── etape2_parser/      parser.py (principal), noeuds.py
+├── etape3_analyse/     semantique.py (principal), symboles.py
+├── etape4_traduction/  generateur.py (principal), emetteur.py, backend.py, formateur.py
+├── etape5_execution/   compilateur.py (principal), cli.py, repl.py
+├── erreurs.py          les erreurs, communes à toutes les étapes
+└── __main__.py         « python -m plume »
+```
+
+Chaque dossier a un `__init__.py` qui résume son étape : ce qui entre, ce qui sort, le rôle de chaque fichier.
+
 ### `erreurs.py` : les positions et les erreurs
 
 - **Ce qu'il fait** : définit `Position` (ligne, colonne) et la famille d'erreurs, puis les met en forme pour l'utilisateur.
@@ -36,7 +51,7 @@ Exemple : `soit x = 2;`
   - `ErreursMultiples` regroupe plusieurs erreurs, pour les signaler toutes d'un coup.
   - `formater(erreur, source, fichier)` produit `fichier:ligne:colonne : genre : message`, puis la ligne fautive et un `^` sous la colonne.
 
-### `tokens.py` : les sortes de mots
+### `etape1_lexer/tokens.py` : les sortes de mots
 
 - **Ce qu'il fait** : décrit ce qu'est un token, c'est-à-dire un mot du programme avec son étiquette.
 - **Comment** :
@@ -44,7 +59,7 @@ Exemple : `soit x = 2;`
   - `Token` est une dataclass gelée qui réunit l'étiquette (`kind`), le texte exact (`lexeme`) et la `position`.
   - `MOTS_CLES` (mot → étiquette) et `SYMBOLES` sont **construits à partir de l'Enum**. `SYMBOLES` est trié du plus long au plus court.
 
-### `lexer.py` : découper le texte
+### `etape1_lexer/lexer.py` : découper le texte
 
 - **Ce qu'il fait** : transforme le texte en tokens.
 - **Comment** : un curseur `i` avance caractère par caractère, et chaque tour de boucle regarde le caractère courant.
@@ -62,12 +77,12 @@ Exemple : `soit x = 2;`
 
 `tokenize` est un **générateur** (`yield`) : il ne découpe que ce qu'on lui demande. Il termine toujours par un token `FIN`.
 
-### `flux.py` : regarder devant
+### `etape1_lexer/flux.py` : regarder devant
 
 - **Ce qu'il fait** : permet au parser de regarder le token suivant **sans le consommer**.
 - **Comment** : `Flux[T]` garde les éléments déjà lus dans un tampon (`deque`). `regarde(n)` lit dans la source seulement ce qui manque, et `avance()` consomme l'élément courant.
 
-### `noeuds.py` : l'arbre
+### `etape2_parser/noeuds.py` : l'arbre
 
 - **Ce qu'il fait** : définit une classe par sorte de nœud.
   - Expressions (`Expr`) : `Entier`, `Texte`, `Booleen`, `Variable`, `Unaire`, `Binaire`, `Appel`.
@@ -78,7 +93,7 @@ Exemple : `soit x = 2;`
   - Chaque nœud a un champ `pos` exclu de `==` et du `repr` : deux arbres de même forme sont égaux.
   - `afficher_arbre` dessine n'importe quel arbre grâce à `dataclasses.fields`.
 
-### `parser.py` : assembler l'arbre
+### `etape2_parser/parser.py` : assembler l'arbre
 
 - **Ce qu'il fait** : transforme les tokens en arbre et signale les erreurs de syntaxe.
 - **Comment** :
@@ -87,7 +102,7 @@ Exemple : `soit x = 2;`
   - Les règles sont rangées dans deux tables, `PREFIXES` et `INFIXES`, remplies par les **décorateurs paramétrés** `@prefixe(...)` et `@infixe(..., precedence=...)`.
   - **Erreurs** : `_proteger` attrape une `ErreurSyntaxe`, la note, puis `_synchroniser` saute jusqu'au prochain `;` ou mot-clé. À la fin, `parse()` lève une seule `ErreursMultiples`.
 
-### `symboles.py` : la table des noms
+### `etape3_analyse/symboles.py` : la table des noms
 
 - **Ce qu'il fait** : retient les noms déclarés (pas leurs valeurs), bloc par bloc.
 - **Comment** :
@@ -95,7 +110,7 @@ Exemple : `soit x = 2;`
   - `with table.portee():` empile une portée à l'entrée d'un bloc et la retire à la sortie (`@contextmanager`).
   - `chercher(nom)` cherche du bloc le plus intérieur vers le niveau principal.
 
-### `semantique.py` : vérifier le sens
+### `etape3_analyse/semantique.py` : vérifier le sens
 
 - **Ce qu'il fait** : refuse les programmes bien écrits mais qui n'ont pas de sens.
 - **Comment** :
@@ -109,7 +124,7 @@ Exemple : `soit x = 2;`
   - Il note aussi, pour chaque fonction, les variables globales qu'elle modifie (`Analyse.globales_modifiees`).
 - **Pourquoi interdire la redéclaration** : Python n'a pas de portée de bloc. Sans cette règle, deux variables Plume de même nom deviendraient une seule variable en Python.
 
-### `emetteur.py` : écrire du code indenté
+### `etape4_traduction/emetteur.py` : écrire du code indenté
 
 - **Ce qu'il fait** : accumule les lignes du code produit.
 - **Comment** :
@@ -117,7 +132,7 @@ Exemple : `soit x = 2;`
   - `with bloc():` monte d'un niveau, et ajoute `pass` si le bloc est resté vide.
   - `with depuis(position):` note de quelle ligne Plume vient chaque ligne produite. C'est le dictionnaire `correspondances`.
 
-### `generateur.py` : traduire en Python
+### `etape4_traduction/generateur.py` : traduire en Python
 
 - **Ce qu'il fait** : écrit le Python équivalent de l'arbre.
 - **Comment** :
@@ -128,19 +143,19 @@ Exemple : `soit x = 2;`
     3. un **prélude** (`_texte`, `_affiche`) affiche `vrai`, `faux` et `rien` ;
     4. `global x` est ajouté quand une fonction modifie une globale.
 
-### `backend.py` : le contrat d'un traducteur
+### `etape4_traduction/backend.py` : le contrat d'un traducteur
 
 - **Ce qu'il fait** : définit ce que doit avoir un traducteur.
 - **Comment** :
   - `Backend` est un `Protocol` : un `nom`, une `extension`, un booléen `executable` et une méthode `generer(programme, analyse) -> Sortie`.
   - `Sortie` contient le code produit et les correspondances de lignes.
 
-### `formateur.py` : réécrire du Plume proprement
+### `etape4_traduction/formateur.py` : réécrire du Plume proprement
 
 - **Ce qu'il fait** : un deuxième backend, qui réécrit le programme en Plume bien présenté au lieu de le traduire en Python.
 - **Comment** : même forme que le générateur. Il ne met que les parenthèses nécessaires, en comparant les forces des opérateurs.
 
-### `compilateur.py` : la façade
+### `etape5_execution/compilateur.py` : la façade
 
 - **Ce qu'il fait** : le seul point d'entrée vers la chaîne. La ligne de commande, le REPL et le serveur MCP passent tous par lui.
 - **Comment** :
@@ -150,7 +165,7 @@ Exemple : `soit x = 2;`
   - Si Python plante, `traduire()` remonte le traceback jusqu'à une ligne du code généré (fichier `"<plume>"`), retrouve la ligne Plume grâce aux correspondances, et lève une `ErreurExecution` en français, avec `raise … from`.
   - `Session` garde l'état entre deux saisies du REPL.
 
-### `cli.py` et `__main__.py` : la ligne de commande
+### `etape5_execution/cli.py` et `__main__.py` : la ligne de commande
 
 - **Ce qu'il fait** : `python -m plume run|transpile|check|fmt|repl fichier`.
 - **Comment** :
@@ -158,7 +173,7 @@ Exemple : `soit x = 2;`
   - Les erreurs sont affichées sur `stderr` avec `formater`.
   - Code de sortie : 0 si tout va bien, 1 pour une erreur de compilation, 3 pour une erreur d'exécution.
 
-### `repl.py` : le mode interactif
+### `etape5_execution/repl.py` : le mode interactif
 
 - **Ce qu'il fait** : `plume>` attend une ligne, l'exécute et affiche le résultat.
 - **Comment** :
@@ -187,7 +202,7 @@ python -m pytest projet
       - `format` remet en forme ;
       - `run` exécute.
 
-      Chaque outil appelle la façade `plume.compilateur` et renvoie du JSON (`TypedDict`).
+      Chaque outil appelle la façade `plume.etape5_execution.compilateur` et renvoie du JSON (`TypedDict`).
     - **4 ressources** (`@mcp.resource`), que l'IA lit : la spécification, la liste des exemples, chaque exemple et sa sortie attendue.
     - **2 prompts** (`@mcp.prompt`), des modes d'emploi : `ecrire_programme(tache)` et `corriger_programme(source, erreurs)`.
   - `bac_a_sable.py` exécute un programme dans un **sous-processus** :

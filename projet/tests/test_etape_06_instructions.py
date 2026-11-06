@@ -1,6 +1,6 @@
 import pytest
 from plume.erreurs import ErreurLexicale, ErreursMultiples, Position
-from plume.noeuds import (
+from plume.etape2_parser.noeuds import (
     Affectation,
     Affiche,
     Appel,
@@ -15,7 +15,7 @@ from plume.noeuds import (
     Texte,
     Variable,
 )
-from plume.parser import parse
+from plume.etape2_parser.parser import parse
 
 
 def une(source):

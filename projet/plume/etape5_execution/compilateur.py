@@ -12,7 +12,6 @@ La chaîne complète, en trois fonctions :
 import traceback
 from dataclasses import dataclass
 
-from plume.backend import Backend, Sortie
 from plume.erreurs import (
     ErreurBackend,
     ErreurExecution,
@@ -20,13 +19,14 @@ from plume.erreurs import (
     ErreurPlume,
     Position,
 )
-from plume.formateur import Formateur
-from plume.generateur import GenerateurPython
-from plume.lexer import tokenize
-from plume.noeuds import Programme
-from plume.parser import parse, parse_expression
-from plume.semantique import Analyse, Analyseur
-from plume.tokens import Token, TokenKind
+from plume.etape1_lexer.lexer import tokenize
+from plume.etape1_lexer.tokens import Token, TokenKind
+from plume.etape2_parser.noeuds import Programme
+from plume.etape2_parser.parser import parse, parse_expression
+from plume.etape3_analyse.semantique import Analyse, Analyseur
+from plume.etape4_traduction.backend import Backend, Sortie
+from plume.etape4_traduction.formateur import Formateur
+from plume.etape4_traduction.generateur import GenerateurPython
 
 #: Le nom de fichier du code généré : il permet de reconnaître ses lignes dans
 #: un traceback.

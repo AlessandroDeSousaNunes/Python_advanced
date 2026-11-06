@@ -2,7 +2,7 @@ import dataclasses
 
 import pytest
 from plume.erreurs import Position
-from plume.noeuds import (
+from plume.etape2_parser.noeuds import (
     Affiche,
     Binaire,
     Entier,

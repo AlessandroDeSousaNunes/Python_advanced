@@ -12,9 +12,7 @@ sans rien savoir de lui : c'est le principe ouvert/fermé (chapitre 5).
 
 from typing import assert_never
 
-from plume.backend import Sortie
-from plume.emetteur import Emetteur
-from plume.noeuds import (
+from plume.etape2_parser.noeuds import (
     Affectation,
     Affiche,
     Appel,
@@ -34,8 +32,19 @@ from plume.noeuds import (
     Unaire,
     Variable,
 )
-from plume.parser import APPEL, COMPARAISON, ET, MOINS_UNAIRE, NON, OU, PRODUIT, SOMME
-from plume.semantique import Analyse
+from plume.etape2_parser.parser import (
+    APPEL,
+    COMPARAISON,
+    ET,
+    MOINS_UNAIRE,
+    NON,
+    OU,
+    PRODUIT,
+    SOMME,
+)
+from plume.etape3_analyse.semantique import Analyse
+from plume.etape4_traduction.backend import Sortie
+from plume.etape4_traduction.emetteur import Emetteur
 
 PRECEDENCES = {
     "ou": OU,

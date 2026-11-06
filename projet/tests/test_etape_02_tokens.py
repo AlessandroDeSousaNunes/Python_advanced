@@ -2,7 +2,7 @@ import dataclasses
 
 import pytest
 from plume.erreurs import Position
-from plume.tokens import MOTS_CLES, SYMBOLES, Token, TokenKind
+from plume.etape1_lexer.tokens import MOTS_CLES, SYMBOLES, Token, TokenKind
 
 
 def test_position_se_lit_comme_dans_un_editeur():

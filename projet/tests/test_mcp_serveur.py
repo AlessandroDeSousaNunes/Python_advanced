@@ -5,7 +5,7 @@ import sys
 
 import pytest
 from outils import EXEMPLES, PROJET, attendu, lire
-from plume.noeuds import Entier, Texte, Variable
+from plume.etape2_parser.noeuds import Entier, Texte, Variable
 from serveur_plume import bac_a_sable
 from serveur_plume.serveur import mcp, noeud_json
 

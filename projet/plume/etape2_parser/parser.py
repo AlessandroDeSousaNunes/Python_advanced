@@ -25,9 +25,10 @@ from plume.erreurs import (
     ErreursMultiples,
     ErreurSyntaxe,
 )
-from plume.flux import Flux
-from plume.lexer import tokenize
-from plume.noeuds import (
+from plume.etape1_lexer.flux import Flux
+from plume.etape1_lexer.lexer import tokenize
+from plume.etape1_lexer.tokens import Token, TokenKind
+from plume.etape2_parser.noeuds import (
     Affectation,
     Affiche,
     Appel,
@@ -47,7 +48,6 @@ from plume.noeuds import (
     Unaire,
     Variable,
 )
-from plume.tokens import Token, TokenKind
 
 T = TokenKind
 

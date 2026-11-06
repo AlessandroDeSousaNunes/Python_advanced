@@ -12,8 +12,8 @@ from collections.abc import Generator
 from contextlib import redirect_stdout
 from dataclasses import dataclass
 
-from plume.compilateur import Session, est_expression, est_incomplet
 from plume.erreurs import ErreurPlume, formater
+from plume.etape5_execution.compilateur import Session, est_expression, est_incomplet
 
 INVITE = "plume> "
 SUITE = "....> "

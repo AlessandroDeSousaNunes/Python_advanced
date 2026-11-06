@@ -1,5 +1,5 @@
 """Rend importable le paquet du langage (le dossier parent de `tests/`) :
-`from plume.lexer import tokenize` fonctionne alors dans les tests."""
+`from plume.etape1_lexer.lexer import tokenize` fonctionne alors dans les tests."""
 
 import sys
 from pathlib import Path

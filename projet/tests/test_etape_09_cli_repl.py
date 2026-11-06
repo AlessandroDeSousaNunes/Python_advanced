@@ -5,10 +5,10 @@ import sys
 
 import pytest
 from outils import EXEMPLES, PROJET, attendu
-from plume.cli import ERREUR_COMPILATION, ERREUR_EXECUTION, OK, main
-from plume.compilateur import executer
 from plume.erreurs import ErreurExecution, Position
-from plume.repl import INVITE, SUITE, Reponse, repl
+from plume.etape5_execution.cli import ERREUR_COMPILATION, ERREUR_EXECUTION, OK, main
+from plume.etape5_execution.compilateur import executer
+from plume.etape5_execution.repl import INVITE, SUITE, Reponse, repl
 
 
 @pytest.fixture

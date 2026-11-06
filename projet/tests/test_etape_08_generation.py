@@ -1,8 +1,8 @@
 import pytest
 from outils import EXEMPLES, attendu, lire
-from plume.compilateur import executer, transpiler
-from plume.emetteur import Emetteur
-from plume.generateur import PRELUDE
+from plume.etape4_traduction.emetteur import Emetteur
+from plume.etape4_traduction.generateur import PRELUDE
+from plume.etape5_execution.compilateur import executer, transpiler
 
 
 def code(source):

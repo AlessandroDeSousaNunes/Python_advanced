@@ -1,10 +1,10 @@
 import pytest
 from outils import EXEMPLES, PROJET, lire
-from plume.backend import Sortie
-from plume.cli import ERREUR_COMPILATION, OK, main
-from plume.compilateur import BACKENDS, executer, transpiler
 from plume.erreurs import ErreurBackend
-from plume.parser import parse
+from plume.etape2_parser.parser import parse
+from plume.etape4_traduction.backend import Sortie
+from plume.etape5_execution.cli import ERREUR_COMPILATION, OK, main
+from plume.etape5_execution.compilateur import BACKENDS, executer, transpiler
 
 
 def formater(source):

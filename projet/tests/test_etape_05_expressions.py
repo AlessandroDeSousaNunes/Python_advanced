@@ -1,8 +1,16 @@
 import pytest
 from plume.erreurs import ErreurSyntaxe, Position
-from plume.noeuds import Appel, Binaire, Booleen, Entier, Texte, Unaire, Variable
-from plume.parser import INFIXES, PREFIXES, Parser, parse_expression
-from plume.tokens import TokenKind as T
+from plume.etape1_lexer.tokens import TokenKind as T
+from plume.etape2_parser.noeuds import (
+    Appel,
+    Binaire,
+    Booleen,
+    Entier,
+    Texte,
+    Unaire,
+    Variable,
+)
+from plume.etape2_parser.parser import INFIXES, PREFIXES, Parser, parse_expression
 
 
 def b(op, gauche, droite):

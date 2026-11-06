@@ -1,8 +1,8 @@
 import pytest
 from plume.erreurs import ErreurLexicale, Position, formater
-from plume.flux import Flux
-from plume.lexer import tokenize
-from plume.tokens import TokenKind as T
+from plume.etape1_lexer.flux import Flux
+from plume.etape1_lexer.lexer import tokenize
+from plume.etape1_lexer.tokens import TokenKind as T
 
 
 def types(source):

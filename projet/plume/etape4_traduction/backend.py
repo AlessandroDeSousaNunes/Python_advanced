@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from plume.erreurs import Position
-from plume.noeuds import Programme
-from plume.semantique import Analyse
+from plume.etape2_parser.noeuds import Programme
+from plume.etape3_analyse.semantique import Analyse
 
 
 @dataclass(frozen=True, slots=True)

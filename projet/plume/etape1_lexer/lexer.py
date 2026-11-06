@@ -17,7 +17,7 @@ au parser avec ``yield`` : le lexer ne découpe que ce qu'on lui demande.
 from collections.abc import Iterator
 
 from plume.erreurs import ErreurLexicale, Position
-from plume.tokens import MOTS_CLES, SYMBOLES, Token, TokenKind
+from plume.etape1_lexer.tokens import MOTS_CLES, SYMBOLES, Token, TokenKind
 
 CHIFFRES = "0123456789"
 BLANCS = " \t\r"

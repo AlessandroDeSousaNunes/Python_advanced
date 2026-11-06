@@ -11,9 +11,9 @@ import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-from plume.compilateur import BACKENDS, compiler, executer, transpiler
 from plume.erreurs import ErreurExecution, ErreurPlume, formater
-from plume.repl import repl
+from plume.etape5_execution.compilateur import BACKENDS, compiler, executer, transpiler
+from plume.etape5_execution.repl import repl
 
 OK, ERREUR_COMPILATION, ERREUR_EXECUTION = 0, 1, 3  # 2 : réservé par argparse
 

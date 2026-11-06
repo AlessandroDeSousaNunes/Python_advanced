@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from functools import singledispatchmethod
 
 from plume.erreurs import ErreurPlume, ErreurSemantique, ErreursMultiples, Position
-from plume.noeuds import (
+from plume.etape2_parser.noeuds import (
     Affectation,
     Affiche,
     Appel,
@@ -40,7 +40,7 @@ from plume.noeuds import (
     Unaire,
     Variable,
 )
-from plume.symboles import Genre, Symbole, TableSymboles
+from plume.etape3_analyse.symboles import Genre, Symbole, TableSymboles
 
 #: Les fonctions prédéfinies et leur nombre de paramètres.
 PREDEFINIES: dict[str, int] = {"texte": 1}

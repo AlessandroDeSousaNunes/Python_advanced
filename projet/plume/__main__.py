@@ -1,5 +1,5 @@
 import sys
 
-from plume.cli import main
+from plume.etape5_execution.cli import main
 
 sys.exit(main())
