@@ -140,7 +140,7 @@ Chaque dossier a un `__init__.py` qui résume son étape : ce qui entre, ce qui 
   - Quatre précautions :
     1. chaque calcul est mis entre parenthèses ;
     2. les noms qui gênent Python (`print`, `len`…) sont renommés `_v_…` ;
-    3. un **prélude** (`_texte`, `_affiche`) affiche `vrai`, `faux` et `rien` ;
+    3. `affiche` devient un simple `print` ; une valeur qui peut être `vrai`, `faux` ou `rien` passe par `_texte()` (le **prélude**) pour s'afficher en français ;
     4. `global x` est ajouté quand une fonction modifie une globale.
 
 ### `etape4_traduction/backend.py` : le contrat d'un traducteur

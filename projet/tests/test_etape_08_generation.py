@@ -54,19 +54,20 @@ def test_emetteur_retrouve_son_niveau_apres_une_exception():
     [
         ("soit x = 1;", "x = 1\n"),
         ("soit x = 1; x = x + 1;", "x = 1\nx = (x + 1)\n"),
-        ('affiche "a", vrai;', "_affiche('a', True)\n"),
+        ('affiche "a", vrai;', "print('a', _texte(True))\n"),
+        ("affiche 1 + 2;", "print((1 + 2))\n"),
         ("tantque faux { }", "while False:\n    pass\n"),
         (
             "si vrai { affiche 1; } sinon { affiche 2; }",
-            "if True:\n    _affiche(1)\nelse:\n    _affiche(2)\n",
+            "if True:\n    print(1)\nelse:\n    print(2)\n",
         ),
         (
             "fonction f(a) { retourne a / 2; }",
             "def f(a):\n    return (a // 2)\n",
         ),
         ("fonction f() { retourne; } f();", "def f():\n    return\nf()\n"),
-        ("affiche non -1 < 2;", "_affiche((not ((-1) < 2)))\n"),
-        ("affiche texte(1);", "_affiche(_texte(1))\n"),
+        ("affiche non -1 < 2;", "print(_texte((not ((-1) < 2))))\n"),
+        ("affiche texte(1);", "print(_texte(1))\n"),
     ],
 )
 def test_traduction_des_instructions(source, python):
@@ -75,7 +76,7 @@ def test_traduction_des_instructions(source, python):
 
 def test_les_parentheses_preservent_le_sens(capsys):
     # En Python, 3 > 2 > 1 vaut True ; en Plume, (3 > 2) > 1 vaut vrai > 1.
-    assert code("affiche 3 > 2 > 1;") == "_affiche(((3 > 2) > 1))\n"
+    assert code("affiche 3 > 2 > 1;") == "print(_texte(((3 > 2) > 1)))\n"
     assert sortie("affiche 3 > 2 > 1;", capsys) == "faux\n"
 
 

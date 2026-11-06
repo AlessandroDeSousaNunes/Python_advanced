@@ -6,8 +6,10 @@ Quatre précautions :
    priorités de Python ne changent jamais le sens (``a < b < c``) ;
 2. les noms qui gênent en Python (``print``, ``class``, ``len``…) sont
    renommés ``_v_print``… ; un nom Plume ne commence jamais par ``_`` ;
-3. un court prélude reproduit l'affichage de Plume (``vrai``, ``rien``…), et
-   le fichier généré reste lançable sans Plume ;
+3. ``affiche`` devient un simple ``print``. Seule une valeur qui peut être un
+   booléen ou rien passe par ``_texte`` (une petite fonction du prélude), pour
+   afficher ``vrai`` / ``faux`` / ``rien`` au lieu de ``True`` / ``False`` /
+   ``None``. Le fichier généré reste lançable sans Plume ;
 4. une fonction qui modifie une globale commence par ``global``.
 
 En bref : on parcourt l'arbre et, pour chaque nœud, on écrit le Python
@@ -55,10 +57,6 @@ def _texte(valeur):
         return "rien"
     return str(valeur)
 
-
-def _affiche(*valeurs):
-    print(" ".join(_texte(valeur) for valeur in valeurs))
-
 """
 
 #: Les opérateurs Plume et leur équivalent Python.
@@ -91,6 +89,26 @@ def nom_python(nom: str) -> str:
     return f"_v_{nom}" if nom in NOMS_RESERVES else nom
 
 
+#: Les calculs qui donnent toujours un nombre ou un texte, jamais vrai/faux/rien.
+CALCULS = frozenset({"+", "-", "*", "/", "%"})
+
+
+def jamais_booleen(expr: Expr) -> bool:
+    """Vrai si ``expr`` donne sûrement un nombre ou un texte. Alors ``print``
+    l'affiche déjà comme Plume, sans passer par ``_texte``."""
+    match expr:
+        case Entier() | Texte():
+            return True
+        case Binaire(operateur, _, _):
+            return operateur in CALCULS
+        case Unaire("-", _):
+            return True
+        case Appel("texte", _):
+            return True
+        case _:
+            return False
+
+
 class GenerateurPython:
     nom = "python"
     extension = ".py"
@@ -119,7 +137,10 @@ class GenerateurPython:
                 case Declaration(nom, valeur) | Affectation(nom, valeur):
                     e.ligne(f"{nom_python(nom)} = {self.expr(valeur)}")
                 case Affiche(valeurs):
-                    e.ligne(f"_affiche({', '.join(self.expr(v) for v in valeurs)})")
+                    # affiche a, b;  devient  print(a, b)  : print sépare déjà
+                    # les valeurs par une espace, comme Plume.
+                    morceaux = ", ".join(self.affichable(v) for v in valeurs)
+                    e.ligne(f"print({morceaux})")
                 case Si(condition, alors, sinon):
                     e.ligne(f"if {self.expr(condition)}:")
                     self.bloc(alors)
@@ -147,6 +168,12 @@ class GenerateurPython:
                     e.ligne(self.expr(expression))
                 case _:
                     assert_never(instr)
+
+    def affichable(self, expr: Expr) -> str:
+        """Une valeur à donner à ``print``. Si elle peut être vrai, faux ou
+        rien, on l'entoure de ``_texte(...)`` pour l'afficher en français."""
+        code = self.expr(expr)
+        return code if jamais_booleen(expr) else f"_texte({code})"
 
     def expr(self, expr: Expr) -> str:
         # Une expression devient un morceau de texte Python. Chaque calcul est
