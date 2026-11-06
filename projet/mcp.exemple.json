@@ -1,9 +1,12 @@
 {
   "mcpServers": {
     "plume": {
-      "command": "python",
+      "command": "C:/Users/aless/AppData/Local/Programs/Python/Python312/python.exe",
       "args": ["-m", "serveur_plume"],
-      "cwd": "C:/Users/aless/Python_advanced/projet"
+      "env": {
+        "PYTHONPATH": "C:/Users/aless/Python_advanced/projet",
+        "PYTHONIOENCODING": "utf-8"
+      }
     }
   }
 }
