@@ -40,3 +40,7 @@ Langage : étapes 1 à 10 faites. Extension 13 (source maps) : faite
 (`python -m plume transpile prog.plume -o prog.py --sourcemap`).
 Serveur MCP : étapes 1 à 6 faites (`python -m serveur_plume`), essai avec une
 vraie IA raconté dans `projet/NOTES.md`.
+
+## Présentation
+
+`Plume_presentation.pptx` : la présentation du projet (16 slides, avec les notes de l'orateur).
