@@ -1,16 +1,40 @@
 """Exécuter un programme Plume dans un sous-processus, sans risque pour le serveur.
 
-La question de sécurité : c'est une IA qui envoie les programmes, on ne sait
-donc pas ce qu'ils font. Plume ne peut ni lire de fichier, ni écouter le
-clavier, ni ouvrir le réseau : un programme Plume ne peut que calculer et
-afficher. Les deux vrais risques sont donc :
+La question de sécurité : c'est une IA qui envoie les programmes, personne ne
+les a relus.
 
-- une boucle sans fin : on coupe le processus après ``delai`` secondes ;
-- un affichage sans fin : on ne garde que ``LIMITE`` octets, puis on coupe.
+Les risques, et la protection de chacun :
 
-Par précaution, le fils tourne aussi dans un dossier temporaire (supprimé
-ensuite), sans entrée clavier, et avec un environnement réduit : il ne voit
-pas les variables d'environnement du serveur (mots de passe, clés…).
+- boucle sans fin : le fils est tué après ``delai`` secondes ;
+- affichage sans fin : on ne garde que ``LIMITE`` octets par flux, puis on tue ;
+- mémoire (un entier qui double sans fin) : ``RLIMIT_AS`` posé par le fils
+  lui-même, sous Linux et macOS seulement (le module ``resource`` n'existe pas
+  sous Windows) ;
+- plantage du serveur : le programme ne tourne jamais dans le serveur
+  (aucun ``exec`` ici), seulement dans un processus séparé ;
+- fichiers qui traînent : dossier temporaire supprimé par ``with`` ;
+- lecture de l'entrée du serveur : ``stdin=DEVNULL`` (en stdio, l'entrée du
+  serveur est le canal MCP) ;
+- fuite de secrets : environnement réduit, le fils ne voit pas les variables
+  du serveur.
+
+Ce que ces protections ne couvrent PAS : l'accès aux fichiers, au réseau, aux
+autres programmes. C'est la conception de Plume qui protège le système :
+
+- Plume n'a ni fichiers, ni réseau, ni import, ni lecture au clavier : un
+  programme ne peut que calculer et afficher ;
+- un texte ``"..."`` est traduit avec ``repr`` : un texte comme
+  ``"'); import os; ('"`` reste un simple texte en Python ;
+- un nom de variable ne contient que lettres, chiffres et ``_``, et ne commence
+  jamais par ``_`` ; les noms gênants (``print``, ``exec``, ``open``,
+  ``__import__``…) sont renommés ``_v_...`` : impossible d'appeler une
+  fonction de Python ;
+- un commentaire ``#`` est jeté par le lexer : il n'arrive jamais dans le
+  Python généré.
+
+Aucun programme Plume ne peut donc produire du Python que nous n'avons pas
+prévu. Un langage qui offrirait ``lis_fichier(...)`` demanderait un vrai bac à
+sable (conteneur, utilisateur dédié, filtre des appels système).
 """
 
 import os
@@ -31,6 +55,29 @@ PROJET = Path(__file__).resolve().parent.parent
 #: Au-delà, la sortie est tronquée et le programme arrêté.
 LIMITE = 64 * 1024
 
+#: Mémoire maximale du fils (Linux et macOS seulement).
+MEMOIRE = 512 * 1024 * 1024
+
+#: Le module ``resource`` (limite de mémoire) n'existe pas sous Windows.
+LIMITE_MEMOIRE_POSSIBLE = sys.platform != "win32"
+
+
+def commande_fils(fichier: str) -> list[str]:
+    """La commande qui lance la CLI de Plume sur ``fichier``.
+
+    Sous Linux et macOS, le fils pose lui-même sa limite de mémoire, AVANT
+    d'importer Plume (``preexec_fn`` est déconseillé : le SDK utilise des
+    threads)."""
+    if not LIMITE_MEMOIRE_POSSIBLE:
+        return [sys.executable, "-m", "plume", "run", fichier]
+    code = (
+        "import resource, sys; "
+        f"resource.setrlimit(resource.RLIMIT_AS, ({MEMOIRE}, {MEMOIRE})); "
+        "from plume.etape5_execution.cli import main; "
+        "sys.exit(main(sys.argv[1:]))"
+    )
+    return [sys.executable, "-c", code, "run", fichier]
+
 
 @dataclass
 class Resultat:
@@ -47,11 +94,14 @@ def processus(commande: list[str], dossier: Path) -> Iterator[subprocess.Popen[b
     """Lance le fils, et garantit qu'il est tué et ses tubes fermés à la
     sortie du ``with``, même en cas d'exception."""
     env = {
-        "PYTHONPATH": str(PROJET),
+        "PYTHONPATH": str(PROJET),  # pour que le fils trouve le paquet plume
+        "PATH": os.environ.get("PATH", ""),
+        "PYTHONUTF8": "1",  # les accents passent quel que soit le système
         "PYTHONIOENCODING": "utf-8",
-        # Windows en a besoin pour démarrer Python ; ce n'est pas un secret.
-        "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),
     }
+    if sys.platform == "win32":
+        # Windows en a besoin pour démarrer Python ; ce n'est pas un secret.
+        env["SYSTEMROOT"] = os.environ.get("SYSTEMROOT", "")
     fils = subprocess.Popen(
         commande,
         cwd=dossier,
@@ -89,7 +139,7 @@ def executer(source: str, delai: float = 2.0) -> Resultat:
     with tempfile.TemporaryDirectory(prefix="plume_") as nom_dossier:
         dossier = Path(nom_dossier)
         (dossier / "programme.plume").write_text(source, encoding="utf-8")
-        commande = [sys.executable, "-m", "plume", "run", "programme.plume"]
+        commande = commande_fils("programme.plume")
         debut = time.perf_counter()
         sortie: list[bytes] = []
         erreurs: list[bytes] = []

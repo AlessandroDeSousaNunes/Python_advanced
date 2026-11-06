@@ -40,6 +40,7 @@ MESSAGES_EXECUTION: dict[type[BaseException], str] = {
     ZeroDivisionError: "division par zéro",
     RecursionError: "trop d'appels imbriqués (récursion sans fin ?)",
     TypeError: "opération impossible entre ces types de valeurs",
+    MemoryError: "mémoire épuisée",
 }
 
 

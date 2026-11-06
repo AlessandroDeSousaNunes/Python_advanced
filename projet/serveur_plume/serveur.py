@@ -13,16 +13,13 @@ Chaque outil est une fine couche autour de la façade
 le résultat en JSON.
 """
 
-import re
-from dataclasses import fields, is_dataclass
 from pathlib import Path
-from typing import Annotated, Literal, TypedDict
+from typing import Annotated
 
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ResourceNotFoundError, ToolError
 from mcp_types import ToolAnnotations
-from plume.erreurs import ErreurPlume, ErreursMultiples, formater
-from plume.etape1_lexer.tokens import Token
+from plume.erreurs import ErreurPlume
 from plume.etape5_execution.compilateur import (
     BACKENDS,
     analyser_syntaxe,
@@ -33,6 +30,23 @@ from plume.etape5_execution.compilateur import (
 from pydantic import Field
 
 from serveur_plume import bac_a_sable
+from serveur_plume.conversion import (
+    contient_un_commentaire,
+    erreur_depuis_stderr,
+    erreurs_json,
+    noeud_json,
+    token_json,
+)
+from serveur_plume.schemas import (
+    ErreurJSON,
+    ResultatCheck,
+    ResultatFormat,
+    ResultatParse,
+    ResultatRun,
+    ResultatTokenize,
+    ResultatTranspile,
+    Statut,
+)
 
 PROJET = Path(__file__).resolve().parent.parent
 SPECIFICATION = PROJET / "specification.md"
@@ -56,126 +70,6 @@ LECTURE_SEULE = ToolAnnotations(
 )
 
 Source = Annotated[str, Field(description="Code source d'un programme Plume")]
-
-
-# --- Les formes des réponses (TypedDict) ---------------------------------------
-
-
-class ErreurJSON(TypedDict):
-    genre: str  # "erreur lexicale", "erreur de syntaxe"…
-    message: str
-    ligne: int | None
-    colonne: int | None
-    contexte: str  # le message complet, avec la ligne fautive et un ^
-
-
-class TokenJSON(TypedDict):
-    type: str
-    texte: str
-    ligne: int
-    colonne: int
-
-
-class ResultatTokenize(TypedDict):
-    ok: bool
-    tokens: list[TokenJSON]
-    erreurs: list[ErreurJSON]
-
-
-class ResultatParse(TypedDict):
-    ok: bool
-    arbre: dict[str, object] | None
-    erreurs: list[ErreurJSON]
-
-
-class ResultatCheck(TypedDict):
-    ok: bool
-    erreurs: list[ErreurJSON]
-
-
-class ResultatTranspile(TypedDict):
-    ok: bool
-    code: str
-    correspondances: dict[str, list[int]] | None  # ligne Python -> [ligne, colonne]
-    erreurs: list[ErreurJSON]
-
-
-class ResultatFormat(TypedDict):
-    ok: bool
-    code: str
-    modifie: bool
-    avertissement: str | None
-    erreurs: list[ErreurJSON]
-
-
-Statut = Literal[
-    "ok", "erreur_compilation", "erreur_execution", "delai_depasse", "sortie_tronquee"
-]
-
-
-class ResultatRun(TypedDict):
-    statut: Statut
-    sortie: str
-    erreurs: list[ErreurJSON]
-    duree: float
-
-
-# --- Conversions vers JSON ------------------------------------------------------
-
-
-def erreurs_json(erreur: ErreurPlume, source: str) -> list[ErreurJSON]:
-    """Une entrée par erreur (une ErreursMultiples est aplatie)."""
-    liste = erreur.erreurs if isinstance(erreur, ErreursMultiples) else [erreur]
-    resultat: list[ErreurJSON] = []
-    for e in liste:
-        pos = e.position
-        connue = pos is not None and pos.ligne > 0
-        resultat.append(
-            {
-                "genre": e.genre,
-                "message": e.message,
-                "ligne": pos.ligne if pos is not None and connue else None,
-                "colonne": pos.colonne if pos is not None and connue else None,
-                "contexte": formater(e, source, "programme.plume"),
-            }
-        )
-    return resultat
-
-
-def token_json(jeton: Token) -> TokenJSON:
-    return {
-        "type": jeton.kind.name,
-        "texte": jeton.lexeme,
-        "ligne": jeton.position.ligne,
-        "colonne": jeton.position.colonne,
-    }
-
-
-def noeud_json(valeur: object) -> object:
-    """Convertit un nœud de l'arbre en JSON, avec son type et sa position."""
-    if is_dataclass(valeur) and not isinstance(valeur, type):
-        resultat: dict[str, object] = {"type": type(valeur).__name__}
-        for champ in fields(valeur):
-            if champ.name != "pos":
-                resultat[champ.name] = noeud_json(getattr(valeur, champ.name))
-        pos = getattr(valeur, "pos", None)
-        if pos is not None and pos.ligne > 0:
-            resultat["ligne"] = pos.ligne
-            resultat["colonne"] = pos.colonne
-        return resultat
-    if isinstance(valeur, tuple):
-        return [noeud_json(v) for v in valeur]
-    if valeur is None or isinstance(valeur, bool | int | str):
-        return valeur
-    raise TypeError(f"valeur inattendue dans l'arbre : {valeur!r}")
-
-
-def contient_un_commentaire(source: str) -> bool:
-    """Vrai s'il y a un ``#`` hors d'un texte entre guillemets."""
-    for jeton_ou_texte in re.finditer(r'"(?:\\.|[^"\\\n])*"|#', source):
-        if jeton_ou_texte.group(0) == "#":
-            return True
-    return False
 
 
 # --- Les outils -----------------------------------------------------------------
@@ -296,7 +190,9 @@ def outil_run(
 ) -> ResultatRun:
     """Exécute un programme Plume et renvoie ce qu'il affiche. Le programme est
     d'abord vérifié ; il tourne ensuite dans un processus séparé, limité en
-    durée et en taille de sortie."""
+    durée, en taille de sortie et en mémoire. Statuts possibles : ok,
+    erreur_compilation, erreur_execution (avec la ligne Plume), delai_depasse,
+    sortie_tronquee, memoire_depassee, erreur_interne."""
     # 1. Compiler dans le serveur : rapide, et aucun processus si c'est faux.
     try:
         compiler(source)
@@ -308,7 +204,23 @@ def outil_run(
             "duree": 0.0,
         }
     # 2. Exécuter dans le bac à sable.
-    r = bac_a_sable.executer(source, delai)
+    try:
+        r = bac_a_sable.executer(source, delai)
+    except OSError as exc:  # le processus n'a pas pu être lancé
+        return {
+            "statut": "erreur_interne",
+            "sortie": "",
+            "erreurs": [
+                {
+                    "genre": "erreur interne",
+                    "message": f"exécution impossible : {exc}",
+                    "ligne": None,
+                    "colonne": None,
+                    "contexte": "",
+                }
+            ],
+            "duree": 0.0,
+        }
     if r.delai_depasse:
         statut: Statut = "delai_depasse"
     elif r.tronquee:
@@ -320,28 +232,9 @@ def outil_run(
     erreurs: list[ErreurJSON] = []
     if statut == "erreur_execution":
         erreurs = [erreur_depuis_stderr(r.stderr)]
+        if "mémoire épuisée" in r.stderr or "MemoryError" in r.stderr:
+            statut = "memoire_depassee"
     return {"statut": statut, "sortie": r.stdout, "erreurs": erreurs, "duree": r.duree}
-
-
-def erreur_depuis_stderr(stderr: str) -> ErreurJSON:
-    """Reconstruit l'erreur à partir du message de la CLI :
-    ``programme.plume:2:5 : erreur d'exécution : division par zéro``."""
-    trouve = re.match(r"[^\n]*?:(\d+):(\d+) : ([^:\n]+) : ([^\n]*)", stderr)
-    if trouve is None:
-        return {
-            "genre": "erreur d'exécution",
-            "message": stderr.strip(),
-            "ligne": None,
-            "colonne": None,
-            "contexte": stderr.strip(),
-        }
-    return {
-        "genre": trouve[3],
-        "message": trouve[4],
-        "ligne": int(trouve[1]),
-        "colonne": int(trouve[2]),
-        "contexte": stderr.strip(),
-    }
 
 
 # --- Les ressources -------------------------------------------------------------

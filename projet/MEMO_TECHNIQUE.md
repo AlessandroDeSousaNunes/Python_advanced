@@ -205,12 +205,20 @@ python -m pytest projet
       Chaque outil appelle la façade `plume.etape5_execution.compilateur` et renvoie du JSON (`TypedDict`).
     - **4 ressources** (`@mcp.resource`), que l'IA lit : la spécification, la liste des exemples, chaque exemple et sa sortie attendue.
     - **2 prompts** (`@mcp.prompt`), des modes d'emploi : `ecrire_programme(tache)` et `corriger_programme(source, erreurs)`.
+  - `schemas.py` : les formes des réponses (`TypedDict`), dont le SDK tire le schéma de sortie de chaque outil.
+  - `conversion.py` : transforme les erreurs, les tokens et l'arbre de Plume en JSON.
   - `bac_a_sable.py` exécute un programme dans un **sous-processus** :
     - un dossier temporaire ;
     - une durée maximale, puis le processus est tué ;
     - une sortie limitée à 64 Kio ;
-    - pas d'accès aux variables d'environnement du serveur.
+    - une mémoire limitée (Linux et macOS seulement) ;
+    - pas d'accès aux variables d'environnement du serveur, ni à son entrée.
+
+    Sa docstring explique pourquoi un programme Plume ne peut pas produire du Python dangereux.
+  - `bonjour.py` : le petit serveur d'essai de l'étape 1 (`saluer`, `additionner`, `repeter`).
   - `__main__.py` : `python -m serveur_plume` lance le serveur en stdio. L'IA lui parle par l'entrée et la sortie standard.
+- **Les tests** : un fichier par étape de l'énoncé MCP, de `test_mcp_01_bonjour.py` à `test_mcp_06_integration.py`. Le dernier rejoue l'exercice final avec une « IA » scriptée.
+- **L'essai avec une vraie IA** est raconté dans `NOTES.md`.
 
 ## 3. Ce qui garde quoi
 
