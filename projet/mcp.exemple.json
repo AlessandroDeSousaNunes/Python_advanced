@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "plume": {
+      "command": "python",
+      "args": ["-m", "serveur_plume"],
+      "cwd": "C:/Users/aless/Python_advanced/projet"
+    }
+  }
+}

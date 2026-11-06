@@ -26,7 +26,9 @@ Un petit langage aux mots-clés français, transpilé en Python (`projet/`).
 - `projet/exemples/` : cinq programmes et leurs sorties attendues ;
 - `projet/plume/` : le compilateur (lexer, parser de Pratt, analyse sémantique,
   génération de Python, CLI, REPL, formateur) ;
-- `projet/tests/` : les tests de chaque étape (199 tests, `mypy --strict` compris).
+- `projet/serveur_plume/` : le serveur MCP (outils, ressources, prompts) ;
+- `projet/tests/` : les tests de chaque étape (229 tests, `mypy --strict` compris) ;
+- `projet/MEMO_TECHNIQUE.md` : comment fonctionne le code, fichier par fichier.
 
 ```bash
 cd projet
@@ -34,4 +36,4 @@ python -m plume run exemples/04_fonctions.plume
 python -m plume repl
 ```
 
-Étapes 1 à 10 faites. Extensions 11 à 13 et serveur MCP : pas encore.
+Langage : étapes 1 à 10 faites. Serveur MCP : fait (`python -m serveur_plume`). Extensions 11 à 13 : pas encore.

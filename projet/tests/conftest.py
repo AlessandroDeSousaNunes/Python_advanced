@@ -4,6 +4,15 @@
 import sys
 from pathlib import Path
 
+import pytest
+
+
+@pytest.fixture
+def anyio_backend() -> str:
+    """Les tests MCP sont asynchrones : on les fait tourner avec asyncio."""
+    return "asyncio"
+
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 # Et le module `outils` des tests eux-mêmes.
 sys.path.insert(0, str(Path(__file__).resolve().parent))

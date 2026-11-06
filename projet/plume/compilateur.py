@@ -26,7 +26,7 @@ from plume.lexer import tokenize
 from plume.noeuds import Programme
 from plume.parser import parse, parse_expression
 from plume.semantique import Analyse, Analyseur
-from plume.tokens import TokenKind
+from plume.tokens import Token, TokenKind
 
 #: Le nom de fichier du code généré : il permet de reconnaître ses lignes dans
 #: un traceback.
@@ -57,6 +57,23 @@ def choisir_backend(nom: str) -> Backend:
         raise ErreurBackend(
             f"backend inconnu « {nom} » (disponibles : {disponibles})"
         ) from None
+
+
+def decouper(source: str) -> tuple[list[Token], ErreurLexicale | None]:
+    """Les tokens de ``source``. En cas d'erreur lexicale, renvoie ceux lus
+    avant l'erreur, et l'erreur (le serveur MCP s'en sert)."""
+    jetons: list[Token] = []
+    try:
+        for jeton in tokenize(source):
+            jetons.append(jeton)
+    except ErreurLexicale as erreur:
+        return jetons, erreur
+    return jetons, None
+
+
+def analyser_syntaxe(source: str) -> Programme:
+    """Seulement le lexer et le parser : l'arbre, sans l'analyse sémantique."""
+    return parse(source)
 
 
 def compiler(source: str) -> Compilation:
