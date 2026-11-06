@@ -1,4 +1,17 @@
-"""Les types de token de Plume."""
+"""Les types de token de Plume.
+
+Un token, c'est UN MOT du programme, avec une étiquette qui dit quelle sorte de
+mot c'est. Pour ``soit x = 2;``, le lexer produit 5 tokens (plus FIN) :
+
+    soit   ->  étiquette SOIT           (un mot-clé)
+    x      ->  étiquette IDENT          (un nom choisi par l'utilisateur)
+    =      ->  étiquette EGAL           (un symbole)
+    2      ->  étiquette ENTIER         (un nombre)
+    ;      ->  étiquette POINT_VIRGULE  (un symbole)
+
+``TokenKind`` est la liste de toutes les étiquettes possibles ; ``Token`` est
+la petite fiche qui réunit le mot, son étiquette et sa position.
+"""
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -7,6 +20,9 @@ from plume.erreurs import Position
 
 
 class TokenKind(Enum):
+    """Toutes les étiquettes possibles d'un token. Une ``Enum`` est une liste
+    fermée : un token ne peut pas avoir une étiquette qui n'est pas ici."""
+
     # Littéraux et identifiants : la valeur sert seulement aux messages.
     ENTIER = "<entier>"
     TEXTE = "<texte>"
@@ -82,11 +98,13 @@ SYMBOLES: list[TokenKind] = sorted(
 class Token:
     """Un token : son type, son lexème et sa position. Pour un texte, le
     lexème est déjà décodé (sans guillemets ni échappements) ; ``taille``
-    garde alors sa longueur dans le source."""
+    garde alors sa longueur dans le source.
 
-    kind: TokenKind
-    lexeme: str
-    position: Position
+    ``frozen=True`` : une fois créé, un token ne peut plus être modifié."""
+
+    kind: TokenKind  # l'étiquette : SOIT, IDENT, ENTIER, PLUS…
+    lexeme: str  # le texte exact du mot : "soit", "x", "2"…
+    position: Position  # où il se trouve : ligne et colonne
     taille: int = field(default=-1, compare=False)
 
     @property

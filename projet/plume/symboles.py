@@ -1,4 +1,13 @@
-"""La table des symboles : une pile de portées."""
+"""La table des symboles : une pile de portées.
+
+Une portée, c'est un dictionnaire « nom -> ce qu'on sait du nom ». Entrer dans
+un bloc ``{`` empile une portée vide ; en sortir ``}`` la retire, et les noms
+déclarés dedans disparaissent. Pour trouver un nom, on cherche du bloc le
+plus intérieur vers le niveau principal.
+
+On n'y range que des NOMS (variable, fonction, nombre de paramètres), jamais
+de valeurs : les valeurs n'existent qu'à l'exécution, dans Python.
+"""
 
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -45,6 +54,9 @@ class TableSymboles:
     def portee(self) -> Iterator[None]:
         """Ouvre une portée pour la durée du ``with`` ; la referme même si une
         exception traverse le bloc."""
+        # @contextmanager (chapitre 4) : le code avant ``yield`` s'exécute à
+        # l'entrée du ``with``, celui du ``finally`` à la sortie, même en cas
+        # d'erreur. La portée est donc toujours refermée.
         self._portees.append({})
         try:
             yield

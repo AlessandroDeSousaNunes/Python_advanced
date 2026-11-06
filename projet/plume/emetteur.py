@@ -1,4 +1,10 @@
-"""L'émetteur : produit du code ligne par ligne, avec l'indentation."""
+"""L'émetteur : produit du code ligne par ligne, avec l'indentation.
+
+Le générateur lui dit « écris cette ligne » ; l'émetteur ajoute les bonnes
+espaces devant, selon le niveau d'indentation. ``with e.bloc():`` monte d'un
+niveau pendant le bloc et redescend à la sortie, comme le corps d'un ``if``
+en Python.
+"""
 
 from collections.abc import Iterator
 from contextlib import contextmanager

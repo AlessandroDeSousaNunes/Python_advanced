@@ -1,4 +1,10 @@
-"""La ligne de commande : ``python -m plume run|transpile|check|fmt|repl``."""
+"""La ligne de commande : ``python -m plume run|transpile|check|fmt|repl``.
+
+C'est la porte d'entrée : on lit la commande avec ``argparse``, on lit le
+fichier, on appelle la façade (``compilateur.py``), et si une erreur Plume
+remonte, on l'affiche proprement sur ``stderr`` avec un code de sortie :
+0 = tout va bien, 1 = erreur de compilation, 3 = erreur d'exécution.
+"""
 
 import argparse
 import sys

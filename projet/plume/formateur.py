@@ -3,6 +3,11 @@
 Indentation de quatre espaces, espaces autour des opérateurs et parenthèses
 minimales : seulement celles qui changent le sens. Les commentaires ne sont
 pas conservés.
+
+C'est un deuxième « backend » : comme le générateur Python, il reçoit l'arbre,
+mais il le réécrit en Plume au lieu de le traduire en Python. Il a la même
+forme (nom, extension, executable, generer), donc le compilateur l'utilise
+sans rien savoir de lui : c'est le principe ouvert/fermé (chapitre 5).
 """
 
 from typing import assert_never

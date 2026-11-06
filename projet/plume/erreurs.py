@@ -20,7 +20,12 @@ SANS_POSITION = Position(0, 0)
 
 
 class ErreurPlume(Exception):
-    """Racine de toutes les erreurs de Plume."""
+    """Racine de toutes les erreurs de Plume.
+
+    Une erreur par étape de la chaîne : ErreurLexicale (lexer),
+    ErreurSyntaxe (parser), ErreurSemantique (analyse), ErreurExecution
+    (Python a planté). Toutes héritent de celle-ci : ``except ErreurPlume``
+    les attrape toutes d'un coup."""
 
     genre = "erreur"
 

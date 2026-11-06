@@ -6,7 +6,12 @@ from collections.abc import Iterable
 
 class Flux[T]:
     """Enveloppe un itérable : on peut regarder les éléments à venir sans les
-    consommer. Le flux ne tire de la source que ce qui est nécessaire."""
+    consommer. Le flux ne tire de la source que ce qui est nécessaire.
+
+    Le parser s'en sert pour « jeter un œil » au token suivant avant de
+    décider quoi faire (par exemple : y a-t-il un ``=`` après ce nom ?).
+    Les éléments déjà lus mais pas encore consommés attendent dans le tampon.
+    """
 
     def __init__(self, source: Iterable[T]) -> None:
         self._source = iter(source)

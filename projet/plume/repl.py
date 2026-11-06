@@ -26,10 +26,12 @@ class Reponse:
 
 
 def repl() -> Generator[Reponse, str, None]:
-    session = Session()
-    tampon = ""
+    session = Session()  # garde les variables d'une saisie à l'autre
+    tampon = ""  # ce qui a été tapé mais pas encore exécuté (bloc ouvert)
     sortie = ""
     while True:
+        # ``yield`` rend la réponse précédente, puis attend la ligne suivante,
+        # envoyée de l'extérieur avec ``session.send(ligne)`` (chapitre 3).
         ligne = yield Reponse(sortie, SUITE if tampon else INVITE)
         sortie = ""
         tampon += ligne + "\n"

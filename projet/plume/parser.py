@@ -4,6 +4,17 @@ Les expressions sont analysées par la méthode de Pratt : chaque type de token
 a une règle « préfixe » (il commence une expression) et/ou une règle
 « infixe » (il suit une expression déjà lue), avec une précédence. Les
 décorateurs ``prefixe`` et ``infixe`` remplissent les deux tables.
+
+En bref : le parser lit les tokens un par un et les ASSEMBLE en arbre.
+
+- Pour une instruction, il regarde le PREMIER token pour choisir un modèle
+  (``soit`` = déclaration, ``si`` = condition…), puis il remplit les trous
+  du modèle dans l'ordre avec ``attend`` (« ici, il me faut un nom »).
+- Pour un calcul, chaque opérateur a une FORCE (sa précédence) : les plus
+  forts prennent leurs voisins en premier, donc ``1 + 2 * 3`` donne
+  ``1 + (2 * 3)``.
+- En cas d'erreur, il la note et saute à l'instruction suivante, pour pouvoir
+  signaler toutes les erreurs d'un coup.
 """
 
 from collections.abc import Callable, Iterable
@@ -46,6 +57,9 @@ OU, ET, NON, COMPARAISON, SOMME, PRODUIT, MOINS_UNAIRE, APPEL = range(1, 9)
 RegleePrefixe = Callable[["Parser", Token], Expr]
 RegleInfixe = Callable[["Parser", Expr, Token], Expr]
 
+# Les deux tables de Pratt, remplies par les décorateurs plus bas :
+# - PREFIXES : « ce token peut COMMENCER une expression, voici comment » ;
+# - INFIXES : « ce token peut PROLONGER une expression, avec cette force ».
 PREFIXES: dict[TokenKind, RegleePrefixe] = {}
 INFIXES: dict[TokenKind, tuple[int, RegleInfixe]] = {}
 
@@ -55,6 +69,8 @@ DEBUTS_INSTRUCTION = frozenset(
 )
 
 
+# Un décorateur paramétré (chapitre 2) : ``@prefixe(T.ENTIER)`` au-dessus d'une
+# méthode l'inscrit dans la table PREFIXES, puis renvoie la méthode inchangée.
 def prefixe(*kinds: TokenKind) -> Callable[[RegleePrefixe], RegleePrefixe]:
     """Enregistre une règle préfixe pour chacun des ``kinds``."""
 
@@ -94,9 +110,9 @@ def decrire(jeton: Token) -> str:
 
 class Parser:
     def __init__(self, tokens: Iterable[Token]) -> None:
-        self.flux = Flux(tokens)
-        self.erreurs: list[ErreurPlume] = []
-        self.precedent: Token | None = None
+        self.flux = Flux(tokens)  # les tokens, avec la possibilité de regarder devant
+        self.erreurs: list[ErreurPlume] = []  # les erreurs trouvées jusqu'ici
+        self.precedent: Token | None = None  # le dernier token consommé
 
     # --- Accès aux tokens -----------------------------------------------------
 
@@ -136,6 +152,14 @@ class Parser:
     # --- Expressions (Pratt) --------------------------------------------------
 
     def expression(self, precedence: int = 0) -> Expr:
+        """Lit une expression. ``precedence`` : on ne garde que les opérateurs
+        PLUS FORTS que ce niveau ; les autres sont laissés à l'appelant.
+
+        Sur ``1 + 2 * 3`` : on lit 1 ; on voit ``+`` (force 5), il lit sa
+        droite avec expression(5) ; celle-ci lit 2, voit ``*`` (force 6 > 5)
+        et le garde : 2 * 3. Le ``+`` reçoit donc ``2 * 3`` comme droite.
+        """
+        # 1. Le début de l'expression : un nombre, un nom, '(', '-', 'non'…
         jeton = self.regarde()
         regle = PREFIXES.get(jeton.kind)
         if regle is None:
@@ -144,6 +168,8 @@ class Parser:
             )
         self.avance()
         gauche = regle(self, jeton)
+        # 2. Tant que le token suivant est un opérateur plus fort que notre
+        #    niveau, il prend ce qu'on a déjà lu comme opérande gauche.
         while True:
             suivant = self.regarde()
             entree = INFIXES.get(suivant.kind)
@@ -252,6 +278,9 @@ class Parser:
             self._synchroniser(depart)
 
     def _synchroniser(self, depart: Token) -> None:
+        # Après une erreur : on saute des tokens jusqu'à un endroit où une
+        # nouvelle instruction commence sûrement (après un « ; », ou devant un
+        # mot-clé comme « soit »). Le parser peut alors continuer.
         if self.regarde() is depart:  # rien n'a été consommé : on avance
             self.avance()
         while not self.verifie(T.FIN):
@@ -264,6 +293,7 @@ class Parser:
             self.avance()
 
     def instruction(self) -> Instr:
+        # Le PREMIER token décide du modèle à suivre.
         match self.regarde().kind:
             case T.SOIT:
                 return self.declaration()
@@ -284,11 +314,12 @@ class Parser:
         self.attend(T.POINT_VIRGULE, "à la fin de l'instruction")
 
     def declaration(self) -> Declaration:
-        mot = self.avance()
-        nom = self.attend(T.IDENT, "après 'soit'")
-        self.attend(T.EGAL, f"après 'soit {nom.lexeme}'")
-        valeur = self.expression()
-        self._fin_instruction()
+        # Le modèle : soit [nom] = [expression] ;
+        mot = self.avance()  # le mot-clé « soit »
+        nom = self.attend(T.IDENT, "après 'soit'")  # il faut un nom
+        self.attend(T.EGAL, f"après 'soit {nom.lexeme}'")  # puis un « = »
+        valeur = self.expression()  # puis un calcul
+        self._fin_instruction()  # puis un « ; »
         return Declaration(nom.lexeme, valeur, pos=mot.position)
 
     def affectation_ou_expression(self) -> Affectation | ExprInstr:

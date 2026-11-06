@@ -1,6 +1,13 @@
 """La façade du compilateur : le seul module que la CLI, le REPL et le serveur
 MCP utilisent. Plus rien d'autre n'appelle directement le lexer, le parser ou
-le générateur."""
+le générateur.
+
+La chaîne complète, en trois fonctions :
+
+    compiler(source)    texte -> tokens -> arbre -> arbre vérifié
+    transpiler(source)  ... -> code Python (du texte)
+    executer(source)    ... -> Python exécute ce code, l'affichage apparaît
+"""
 
 import traceback
 from dataclasses import dataclass
@@ -54,8 +61,8 @@ def choisir_backend(nom: str) -> Backend:
 
 def compiler(source: str) -> Compilation:
     """Analyse syntaxique puis sémantique. Lève ``ErreursMultiples``."""
-    programme = parse(source)
-    return Compilation(programme, Analyseur().analyser(programme))
+    programme = parse(source)  # lexer + parser : texte -> arbre
+    return Compilation(programme, Analyseur().analyser(programme))  # vérifications
 
 
 def transpiler(source: str, backend: str = "python") -> Sortie:
@@ -79,6 +86,9 @@ def executer(source: str, backend: str = "python") -> None:
 def lancer(sortie: Sortie, espace: dict[str, object]) -> None:
     """Exécute le code produit dans ``espace``. Une erreur Python devient une
     ``ErreurExecution`` placée à la ligne Plume fautive."""
+    # À partir d'ici, c'est Python qui travaille : compile() prépare le texte
+    # Python, exec() l'exécute. Les variables du programme sont rangées dans
+    # le dictionnaire ``espace``.
     code = compile(sortie.code, NOM_FICHIER, "exec")
     espace.setdefault("__name__", "__main__")
     try:

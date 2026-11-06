@@ -5,6 +5,15 @@ programme Plume, on interdit de redéclarer un nom tant qu'il est visible :
 pas de masquage dans un bloc, et pas de locale qui porte le nom d'une
 globale. On note aussi les globales que chaque fonction modifie, pour que le
 générateur émette ``global``.
+
+En bref : on parcourt l'arbre nœud par nœud, avec une table des NOMS déclarés
+(pas de valeurs : on ne fait aucun calcul ici). Pour chaque nom utilisé, on
+vérifie qu'il existe ; pour chaque nom déclaré, qu'il n'existe pas déjà.
+Toutes les erreurs sont collectées, puis signalées ensemble.
+
+``singledispatchmethod`` (chapitre 2) choisit la bonne méthode selon le TYPE
+du nœud : ``self.instruction(noeud)`` appelle la variante écrite pour
+``Declaration`` si c'est une déclaration, celle pour ``Si`` si c'est un si…
 """
 
 from dataclasses import dataclass
@@ -47,10 +56,10 @@ class Analyse:
 
 class Analyseur:
     def __init__(self) -> None:
-        self.table = TableSymboles()
-        self.erreurs: list[ErreurPlume] = []
-        self.fonction: str | None = None
-        self.globales: dict[str, set[str]] = {}
+        self.table = TableSymboles()  # les noms déclarés, portée par portée
+        self.erreurs: list[ErreurPlume] = []  # toutes les erreurs trouvées
+        self.fonction: str | None = None  # la fonction en cours d'analyse
+        self.globales: dict[str, set[str]] = {}  # fonction -> globales modifiées
         for nom, nb in PREDEFINIES.items():
             self.table.declarer(Symbole(nom, Genre.PREDEFINIE, nb_parametres=nb))
 
@@ -72,6 +81,9 @@ class Analyseur:
     def declarer(
         self, nom: str, genre: Genre, position: Position, nb_parametres: int = 0
     ) -> None:
+        # La règle centrale de Plume : un nom encore visible ne peut pas être
+        # redéclaré. Python n'a pas de portée de bloc : sans cette règle, le
+        # Python généré mélangerait deux variables de même nom.
         existant = self.table.chercher(nom)
         if existant is not None:
             if existant.genre is Genre.PREDEFINIE:
@@ -113,6 +125,8 @@ class Analyseur:
                 f"on ne peut pas affecter à la fonction « {instr.nom} »", instr.pos
             )
         elif self.fonction is not None and symbole.fonction is None:
+            # On est dans une fonction, et la variable vient du niveau
+            # principal : il faudra « global » en Python, on le note.
             self.globales[self.fonction].add(instr.nom)
 
     @instruction.register

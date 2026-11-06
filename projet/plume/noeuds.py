@@ -3,6 +3,15 @@
 Chaque nœud a un champ ``pos`` (sa position dans le source), exclu de la
 comparaison et du ``repr`` : deux arbres de même forme sont égaux, où qu'ils
 soient écrits.
+
+L'arbre de ``affiche 1 + 2 * 3;`` est :
+
+    Affiche((Binaire("+", Entier(1), Binaire("*", Entier(2), Entier(3))),))
+
+Les nœuds sont rangés les uns dans les autres : le ``*`` est DANS le ``+``,
+donc il est calculé en premier. Chaque classe ci-dessous est une sorte de
+nœud ; les dataclasses écrivent ``__init__``, ``__eq__`` et ``__repr__`` à
+notre place, et ``frozen=True`` interdit de modifier un nœud après coup.
 """
 
 from dataclasses import dataclass, field, fields, is_dataclass
@@ -10,6 +19,8 @@ from typing import Any
 
 from plume.erreurs import SANS_POSITION, Position
 
+# Expr : tout ce qui a une VALEUR (un nombre, un calcul, un appel…).
+# Instr : tout ce qui s'EXÉCUTE (une déclaration, un si, une boucle…).
 type Expr = Entier | Texte | Booleen | Variable | Unaire | Binaire | Appel
 type Instr = (
     Declaration | Affectation | Affiche | Si | TantQue | Fonction | Retourne | ExprInstr
@@ -150,6 +161,10 @@ def afficher_arbre(noeud: object) -> str:
 
 
 def _afficher(valeur: object, niveau: int, etiquette: str, lignes: list[str]) -> None:
+    # Fonction récursive : pour un nœud, on écrit son nom, puis on s'appelle
+    # soi-même sur chacun de ses champs, un cran plus à droite (niveau + 1).
+    # ``fields`` liste les champs de n'importe quelle dataclass : pas besoin
+    # d'écrire un cas par sorte de nœud.
     prefixe = "  " * niveau + (f"{etiquette}: " if etiquette else "")
     if is_dataclass(valeur) and not isinstance(valeur, type):
         lignes.append(prefixe + type(valeur).__name__)

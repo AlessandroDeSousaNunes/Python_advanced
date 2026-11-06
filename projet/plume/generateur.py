@@ -9,6 +9,12 @@ Quatre précautions :
 3. un court prélude reproduit l'affichage de Plume (``vrai``, ``rien``…), et
    le fichier généré reste lançable sans Plume ;
 4. une fonction qui modifie une globale commence par ``global``.
+
+En bref : on parcourt l'arbre et, pour chaque nœud, on écrit le Python
+équivalent avec ``match`` / ``case`` : un ``Si`` devient ``if``, un
+``TantQue`` devient ``while``… Le résultat est du TEXTE, que Python exécutera
+ensuite. ``assert_never`` dans le dernier ``case`` fait vérifier par mypy
+qu'aucune sorte de nœud n'a été oubliée.
 """
 
 import builtins
@@ -106,6 +112,8 @@ class GenerateurPython:
 
     def instruction(self, instr: Instr) -> None:
         e = self.e
+        # « depuis » note que les lignes écrites ici viennent de cette ligne
+        # Plume : en cas de plantage, on saura quelle ligne montrer.
         with e.depuis(instr.pos):
             match instr:
                 case Declaration(nom, valeur) | Affectation(nom, valeur):
@@ -141,11 +149,14 @@ class GenerateurPython:
                     assert_never(instr)
 
     def expr(self, expr: Expr) -> str:
+        # Une expression devient un morceau de texte Python. Chaque calcul est
+        # entouré de parenthèses : (1 + (2 * 3)). Python ne peut donc pas le
+        # lire dans un autre ordre que Plume.
         match expr:
             case Entier(valeur):
                 return str(valeur)
             case Texte(valeur):
-                return repr(valeur)
+                return repr(valeur)  # repr ajoute les guillemets : 'salut'
             case Booleen(valeur):
                 return "True" if valeur else "False"
             case Variable(nom):
