@@ -1,19 +1,20 @@
 """Le contrat d'un backend : ce qui transforme un arbre analysé en code."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Protocol
 
-from plume.erreurs import Position
 from plume.etape2_parser.noeuds import Programme
 from plume.etape3_analyse.semantique import Analyse
+from plume.etape4_traduction.sourcemap import SourceMap
 
 
 @dataclass(frozen=True, slots=True)
 class Sortie:
-    """Le code produit, et pour chaque ligne la position Plume d'origine."""
+    """Le code produit et, pour un backend Python, sa source map
+    (ligne Python -> position Plume). ``None`` pour les autres backends."""
 
     code: str
-    correspondances: dict[int, Position] = field(default_factory=dict)
+    sourcemap: SourceMap | None = None
 
 
 class Backend(Protocol):

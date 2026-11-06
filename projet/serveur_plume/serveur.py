@@ -136,12 +136,10 @@ def outil_transpile(
             "correspondances": None,
             "erreurs": erreurs_json(erreur, source),
         }
+    # La source map (extension 13), sous sa forme JSON.
     correspondances = None
-    if BACKENDS[backend].executable:
-        correspondances = {
-            str(ligne): [pos.ligne, pos.colonne]
-            for ligne, pos in sortie.correspondances.items()
-        }
+    if sortie.sourcemap is not None:
+        correspondances = sortie.sourcemap.vers_json()["lignes"]
     return {
         "ok": True,
         "code": sortie.code,

@@ -148,7 +148,16 @@ Chaque dossier a un `__init__.py` qui résume son étape : ce qui entre, ce qui 
 - **Ce qu'il fait** : définit ce que doit avoir un traducteur.
 - **Comment** :
   - `Backend` est un `Protocol` : un `nom`, une `extension`, un booléen `executable` et une méthode `generer(programme, analyse) -> Sortie`.
-  - `Sortie` contient le code produit et les correspondances de lignes.
+  - `Sortie` contient le code produit et sa source map (`None` pour le formateur).
+
+### `etape4_traduction/sourcemap.py` : la source map (extension 13)
+
+- **Ce qu'il fait** : un petit annuaire « ligne Python → ligne Plume ». Quand Python plante à la ligne 12, la source map dit que c'est la ligne 3 du programme Plume.
+- **Comment** :
+  - `SourceMap` est une dataclass ; `SourceMapJSON` est un `TypedDict` avec `version: Literal[1]`.
+  - `decaler(n)` : le prélude (`_texte`) est collé avant le code, donc toutes les lignes Python descendent de `n`.
+  - `vers_json()` / `SourceMap.depuis_json(...)` (un `@classmethod`) : enregistrer et relire. Une version inconnue est refusée.
+  - `python -m plume transpile prog.plume -o prog.py --sourcemap` écrit aussi `prog.py.map.json`.
 
 ### `etape4_traduction/formateur.py` : réécrire du Plume proprement
 
@@ -162,7 +171,7 @@ Chaque dossier a un `__init__.py` qui résume son étape : ce qui entre, ce qui 
   - `compiler(source)` enchaîne parse et analyse.
   - `transpiler(source, backend)` produit le code.
   - `executer(source)` compile, puis `compile()` + `exec()` le Python.
-  - Si Python plante, `traduire()` remonte le traceback jusqu'à une ligne du code généré (fichier `"<plume>"`), retrouve la ligne Plume grâce aux correspondances, et lève une `ErreurExecution` en français, avec `raise … from`.
+  - Si Python plante, `traduire()` remonte le traceback jusqu'à une ligne du code généré (fichier `"<plume>"`), retrouve la ligne Plume grâce à la source map (de la frame la plus profonde à la moins profonde), et lève une `ErreurExecution` en français, avec `raise … from`.
   - `Session` garde l'état entre deux saisies du REPL.
 
 ### `etape5_execution/cli.py` et `__main__.py` : la ligne de commande

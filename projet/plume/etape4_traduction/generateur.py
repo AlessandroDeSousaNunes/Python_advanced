@@ -46,6 +46,7 @@ from plume.etape2_parser.noeuds import (
 from plume.etape3_analyse.semantique import Analyse
 from plume.etape4_traduction.backend import Sortie
 from plume.etape4_traduction.emetteur import Emetteur
+from plume.etape4_traduction.sourcemap import SourceMap
 
 PRELUDE = """\
 def _texte(valeur):
@@ -117,11 +118,13 @@ class GenerateurPython:
     def generer(self, programme: Programme, analyse: Analyse) -> Sortie:
         self.analyse = analyse
         self.e = Emetteur()
-        for ligne in PRELUDE.splitlines():
-            self.e.ligne(ligne)
         for instr in programme.instructions:
             self.instruction(instr)
-        return Sortie(self.e.texte(), dict(self.e.correspondances))
+        # Le prélude est collé AVANT le code de l'utilisateur : toutes ses
+        # lignes descendent d'autant (extension 13 : SourceMap.decaler).
+        carte = SourceMap(lignes=dict(self.e.correspondances))
+        decalage = len(PRELUDE.splitlines())
+        return Sortie(PRELUDE + self.e.texte(), carte.decaler(decalage))
 
     def bloc(self, instructions: tuple[Instr, ...]) -> None:
         with self.e.bloc():

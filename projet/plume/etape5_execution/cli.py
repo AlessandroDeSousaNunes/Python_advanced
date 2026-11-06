@@ -7,6 +7,7 @@ remonte, on l'affiche proprement sur ``stderr`` avec un code de sortie :
 """
 
 import argparse
+import json
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -62,11 +63,23 @@ def commande_run(args: argparse.Namespace, source: str) -> int:
 
 @avec_source
 def commande_transpile(args: argparse.Namespace, source: str) -> int:
-    code = transpiler(source, args.backend).code
+    sortie = transpiler(source, args.backend)
     if args.sortie:
-        Path(args.sortie).write_text(code, encoding="utf-8")
+        Path(args.sortie).write_text(sortie.code, encoding="utf-8")
     else:
-        print(code, end="")
+        print(sortie.code, end="")
+    if args.sourcemap:
+        # Extension 13 : <sortie>.map.json, à côté du fichier généré.
+        if not args.sortie or sortie.sourcemap is None:
+            print(
+                "plume : --sourcemap demande -o et un backend Python",
+                file=sys.stderr,
+            )
+            return ERREUR_COMPILATION
+        carte = sortie.sourcemap.renommer(Path(args.fichier).name)
+        Path(f"{args.sortie}.map.json").write_text(
+            json.dumps(carte.vers_json(), indent=2), encoding="utf-8"
+        )
     return OK
 
 
@@ -116,6 +129,11 @@ def construire_parseur() -> argparse.ArgumentParser:
     transpile.add_argument("fichier")
     transpile.add_argument("-o", "--sortie", help="écrit le code dans ce fichier")
     transpile.add_argument("--backend", choices=backends, default="python")
+    transpile.add_argument(
+        "--sourcemap",
+        action="store_true",
+        help="écrit aussi <sortie>.map.json (ligne Python -> ligne Plume)",
+    )
     transpile.set_defaults(action=commande_transpile)
 
     check = sous.add_parser("check", help="vérifie sans exécuter")

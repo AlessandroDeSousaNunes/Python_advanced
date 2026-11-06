@@ -84,7 +84,7 @@ def compiler(source: str) -> Compilation:
 
 
 def transpiler(source: str, backend: str = "python") -> Sortie:
-    """Le code produit par ``backend``, et la correspondance de ses lignes."""
+    """Le code produit par ``backend``, et sa source map."""
     choix = choisir_backend(backend)
     compilation = compiler(source)
     return choix.generer(compilation.programme, compilation.analyse)
@@ -117,11 +117,14 @@ def lancer(sortie: Sortie, espace: dict[str, object]) -> None:
 
 def traduire(exc: Exception, sortie: Sortie) -> ErreurExecution:
     """Cherche, de la frame la plus profonde à la moins profonde, la première
-    ligne du code généré qui vient d'une ligne Plume."""
+    ligne du code généré que la source map connaît (extension 13)."""
     position: Position | None = None
+    carte = sortie.sourcemap
     for frame in reversed(traceback.extract_tb(exc.__traceback__)):
-        if frame.filename == NOM_FICHIER and frame.lineno in sortie.correspondances:
-            position = sortie.correspondances[frame.lineno]
+        if carte is None or frame.filename != NOM_FICHIER or frame.lineno is None:
+            continue
+        position = carte.position(frame.lineno)
+        if position is not None:
             break
     message = next(
         (m for t, m in MESSAGES_EXECUTION.items() if isinstance(exc, t)),
